@@ -1,9 +1,9 @@
 # ============================================
 # Laravel Production Dockerfile for Railway
-# Optimized for free-tier deployment (PHP 8.2)
+# Optimized for free-tier deployment (PHP 8.4)
 # ============================================
 
-FROM php:8.2-apache
+FROM php:8.4-apache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
