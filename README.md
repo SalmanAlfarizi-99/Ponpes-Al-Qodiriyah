@@ -17,7 +17,7 @@ Sistem Manajemen Pondok Pesantren Modern berbasis Laravel 8.
 
 - **Backend**: Laravel 8.x
 - **Frontend**: Blade + Tailwind CSS
-- **Database**: MySQL / PostgreSQL
+- **Database**: MySQL
 - **Auth**: Laravel UI dengan role-based access
 
 ---
@@ -27,8 +27,8 @@ Sistem Manajemen Pondok Pesantren Modern berbasis Laravel 8.
 ### Prasyarat
 - PHP 8.0+
 - Composer
-- MySQL 5.7+ atau PostgreSQL
-- Node.js (opsional, untuk assets)
+- MySQL 5.7+
+- Node.js (opsional)
 
 ### Langkah Instalasi
 
@@ -47,7 +47,6 @@ cp .env.example .env
 php artisan key:generate
 
 # 5. Configure database in .env
-# Edit .env file:
 # DB_CONNECTION=mysql
 # DB_HOST=127.0.0.1
 # DB_PORT=3306
@@ -73,9 +72,67 @@ Akses aplikasi di: `http://localhost:8000`
 
 ---
 
-## 🐳 Docker Deployment
+## 🚀 Deploy ke Railway.app
 
-### Build & Run Locally
+### Langkah 1: Buat Akun Railway
+1. Kunjungi https://railway.app
+2. Sign up dengan GitHub
+
+### Langkah 2: Buat Project Baru
+1. Klik **"New Project"**
+2. Pilih **"Deploy from GitHub repo"**
+3. Pilih repository: `Ponpes-Al-Qodiriyah`
+
+### Langkah 3: Tambah MySQL Database
+1. Di project dashboard, klik **"+ New"**
+2. Pilih **"Database"** → **"Add MySQL"**
+3. Railway akan membuat database otomatis
+
+### Langkah 4: Konfigurasi Environment Variables
+Klik service Laravel → **Variables** → tambahkan:
+
+| Variable | Value |
+|----------|-------|
+| `APP_KEY` | `base64:xxxxx` (generate: `php artisan key:generate --show`) |
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+| `APP_URL` | `https://your-app.up.railway.app` |
+| `LOG_CHANNEL` | `stderr` |
+| `SESSION_DRIVER` | `file` |
+| `CACHE_DRIVER` | `file` |
+
+### Langkah 5: Hubungkan ke MySQL
+Klik MySQL service → **Connect** → Copy variables:
+
+| Variable | Source |
+|----------|--------|
+| `DB_CONNECTION` | `mysql` |
+| `DB_HOST` | `${{MySQL.MYSQLHOST}}` |
+| `DB_PORT` | `${{MySQL.MYSQLPORT}}` |
+| `DB_DATABASE` | `${{MySQL.MYSQLDATABASE}}` |
+| `DB_USERNAME` | `${{MySQL.MYSQLUSER}}` |
+| `DB_PASSWORD` | `${{MySQL.MYSQLPASSWORD}}` |
+
+Atau gunakan:
+| Variable | Value |
+|----------|-------|
+| `DATABASE_URL` | `${{MySQL.DATABASE_URL}}` |
+
+### Langkah 6: Deploy
+Railway akan otomatis build dan deploy!
+
+### Langkah 7: Import Database (Opsional)
+Jika perlu import data:
+1. Buka MySQL service → **Data** tab
+2. Atau gunakan Railway CLI:
+```bash
+railway connect mysql
+mysql < database/schema.sql
+```
+
+---
+
+## 🐳 Docker Deployment (Alternatif)
 
 ```bash
 # Build image
@@ -83,72 +140,10 @@ docker build -t ponpes-app .
 
 # Run container
 docker run -p 8000:80 \
-  -e APP_KEY=base64:YOUR_KEY_HERE \
-  -e DB_CONNECTION=mysql \
+  -e APP_KEY=base64:YOUR_KEY \
   -e DB_HOST=host.docker.internal \
-  -e DB_DATABASE=ponpes_db \
-  -e DB_USERNAME=root \
-  -e DB_PASSWORD= \
   ponpes-app
 ```
-
----
-
-## 🚀 Deploy ke Render (Free Tier)
-
-### Langkah 1: Persiapan
-Pastikan repository sudah memiliki:
-- `Dockerfile` ✅
-- `render.yaml` ✅
-
-### Langkah 2: Buat Akun Render
-1. Kunjungi https://render.com
-2. Sign up dengan GitHub
-
-### Langkah 3: Deploy Web Service
-1. Klik **"New +"** → **"Web Service"**
-2. Connect repository: `Ponpes-Al-Qodiriyah`
-3. Konfigurasi:
-   - **Name**: `ponpes-al-qodiriyah`
-   - **Region**: Singapore
-   - **Runtime**: Docker
-   - **Plan**: Free
-
-### Langkah 4: Environment Variables
-Tambahkan di Render Dashboard:
-
-| Variable | Value |
-|----------|-------|
-| `APP_KEY` | `base64:xxxxx` (generate dengan `php artisan key:generate --show`) |
-| `APP_ENV` | `production` |
-| `APP_DEBUG` | `false` |
-| `APP_URL` | `https://your-app.onrender.com` |
-| `DB_CONNECTION` | `mysql` atau `pgsql` |
-| `DB_HOST` | Database host |
-| `DB_PORT` | `3306` atau `5432` |
-| `DB_DATABASE` | Database name |
-| `DB_USERNAME` | Database user |
-| `DB_PASSWORD` | Database password |
-| `LOG_CHANNEL` | `stderr` |
-| `SESSION_DRIVER` | `file` |
-| `CACHE_DRIVER` | `file` |
-
-### Langkah 5: Database (Opsional)
-Untuk PostgreSQL gratis di Render:
-1. **"New +"** → **"PostgreSQL"**
-2. Copy connection string ke env vars
-
-### Langkah 6: Deploy
-Klik **"Create Web Service"** - deployment otomatis dimulai!
-
----
-
-## ⚠️ Free Tier Limitations
-
-- Service sleep setelah 15 menit tidak aktif
-- Cold start ~30 detik
-- RAM limit 512 MB
-- PostgreSQL free tier expire 90 hari
 
 ---
 
@@ -161,30 +156,38 @@ Klik **"Create Web Service"** - deployment otomatis dimulai!
 │   └── Middleware/          # Custom Middleware
 ├── database/
 │   ├── migrations/          # Database migrations
-│   └── seeders/             # Database seeders
-├── resources/
-│   └── views/               # Blade templates
-├── routes/
-│   └── web.php              # Web routes
-├── public/                  # Web root (document root)
-├── Dockerfile               # Docker configuration
-├── render.yaml              # Render deployment config
-└── .env.example             # Environment template
+│   ├── seeders/             # Database seeders
+│   └── schema.sql           # Database export
+├── resources/views/         # Blade templates
+├── routes/web.php           # Web routes
+├── public/                  # Document root
+├── Dockerfile               # Docker config
+├── nixpacks.toml            # Railway config
+└── railway.json             # Railway start command
 ```
+
+---
+
+## ⚠️ Railway Free Tier
+
+- $5 credit gratis per bulan
+- Sleep setelah tidak aktif
+- Shared CPU & RAM
+- Cukup untuk development/demo
 
 ---
 
 ## 🔒 Security
 
-- Jangan pernah commit file `.env`
-- Gunakan environment variables untuk secrets
-- APP_DEBUG harus `false` di production
+- Jangan commit file `.env`
+- Gunakan environment variables
+- `APP_DEBUG=false` di production
 
 ---
 
 ## 📄 License
 
-MIT License - Bebas digunakan untuk keperluan pendidikan.
+MIT License
 
 ---
 
