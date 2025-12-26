@@ -1,0 +1,63 @@
+# Render Blueprint - Infrastructure as Code
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Laravel Web Service
+  - type: web
+    name: ponpes-al-qodiriyah
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore  # Closest to Indonesia
+    healthCheckPath: /
+    envVars:
+      - key: APP_NAME
+        value: "Pondok Pesantren Al-Qodiriyah"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        sync: false  # Will be set automatically by Render
+      - key: APP_KEY
+        generateValue: true
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: ponpes-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ponpes-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: ponpes-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: ponpes-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: ponpes-db
+          property: password
+      - key: CACHE_DRIVER
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+
+  # PostgreSQL Database (Free tier)
+  - type: pserv
+    name: ponpes-db
+    runtime: postgres
+    plan: free
+    region: singapore
+    ipAllowList: []  # Only internal access
